@@ -1,10 +1,31 @@
-use crate::config::{DEFAULT_ADDR, DEFAULT_PORT, FLAG_ADDR, FLAG_PORT};
+use crate::config::{ConfigApp, FLAG_ADDR, FLAG_PATH, FLAG_PORT};
 use std::env::args;
 
-pub(crate) fn args_handle() -> Result<(String, String), ()> {
+fn is_valid_ipv4_octet(octet: &str) -> bool {
+    if let Ok(num) = octet.parse::<u8>() {
+        num <= u8::MAX
+    } else {
+        false
+    }
+}
+
+fn check_ipv4_pattern(ipv4: &str) -> bool {
+    let bytes: Vec<&str> = ipv4.split(".").collect();
+
+    if bytes.len() == 4 {
+        for byte in bytes {
+            if !is_valid_ipv4_octet(byte) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+pub fn args_handle() -> Result<ConfigApp, ()> {
     let mut argv = args().into_iter();
-    let mut addr: String = DEFAULT_ADDR.to_owned();
-    let mut port: String = DEFAULT_PORT.to_owned();
+    let mut config: ConfigApp = ConfigApp::default_setup();
 
     let _ = argv.next().unwrap();
 
@@ -23,9 +44,9 @@ pub(crate) fn args_handle() -> Result<(String, String), ()> {
                     break;
                 };
 
-                match addr_value.as_str() {
-                    addr_arg if addr_arg.contains(".") => {
-                        addr = addr_value.to_owned();
+                match addr_value {
+                    addr_value if check_ipv4_pattern(&addr_value) => {
+                        config.addr = Some(addr_value.to_owned());
                     }
                     _ => {
                         eprintln!("Argument Error: Unknown value for flag --addr.");
@@ -39,22 +60,42 @@ pub(crate) fn args_handle() -> Result<(String, String), ()> {
                 } else {
                     break;
                 };
-                match port_value.as_str() {
+                match port_value {
                     port_value if port_value.chars().all(|c| c.is_numeric()) => {
-                        port = port_value.to_owned();
+                        config.port = Some(port_value.to_owned());
                     }
                     _ => {
-                        eprintln!("Argument Error: Unknown value for --port");
+                        eprintln!("Argument Error: Unknown value for --port.");
+                        return Err(());
+                    }
+                }
+            }
+            file_flag if FLAG_PATH.contains(&file_flag) => {
+                let path_value: String = if let Some(arg_value) = argv.next() {
+                    arg_value
+                } else {
+                    break;
+                };
+                match path_value {
+                    path_value
+                        if path_value
+                            .chars()
+                            .all(|c| c.is_ascii_alphabetic() || c == '/') =>
+                    {
+                        config.file_path = Some(path_value.to_owned());
+                    }
+                    _ => {
+                        eprintln!("Argument Error: This is not the format of an ipv4.");
                         return Err(());
                     }
                 }
             }
             _ => {
-                eprintln!("Argument Error: Unknown flag");
+                eprintln!("Argument Error: Unknown flag.");
                 return Err(());
             }
         }
     }
 
-    Ok((addr, port))
+    Ok(config)
 }
