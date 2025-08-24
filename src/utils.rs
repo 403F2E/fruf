@@ -1,4 +1,4 @@
-use crate::config::{ConfigApp, FLAG_ADDR, FLAG_PATH, FLAG_PORT};
+use crate::config::{ConfigApp, FLAG_ADDR, FLAG_PATH, FLAG_PORT, FLAG_URL};
 use std::env::args;
 
 fn is_valid_ipv4_octet(octet: &str) -> bool {
@@ -37,6 +37,24 @@ pub fn args_handle() -> Result<ConfigApp, ()> {
         };
 
         match arg_flag.as_str() {
+            url_flag if FLAG_URL.contains(&url_flag) => {
+                let url_value: String = if let Some(arg_value) = argv.next() {
+                    arg_value
+                } else {
+                    break;
+                };
+
+                match url_value {
+                    url_value if check_ipv4_pattern(&url_value) => {
+                        config.url = Some(url_value.to_owned());
+                    }
+                    _ => {
+                        eprintln!("Argument Error: Unknown value for flag --url.");
+                        return Err(());
+                    }
+                }
+            }
+
             addr_flag if FLAG_ADDR.contains(&addr_flag) => {
                 let addr_value: String = if let Some(arg_value) = argv.next() {
                     arg_value
