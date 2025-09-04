@@ -1,15 +1,18 @@
 use fruf::{ConfigApp, FLAG_PATH, FLAG_POOL, FLAG_URL};
 use std::env::args;
 
+///
+/// Argument Parser
+///
+/// # Usage:
+/// - in the main.rs
+/// ```
+/// let config = args::parser().unwrap();
+/// ```
 //
-// Argument Parser
-//
-// # Usage:
-// parsing the command arguments for the config struct to store.
-//
-// # Notice:
-// After implementing more than 5 arguments the 'clap' crate is to be used.
-//
+/// # Notice:
+/// After implementing more than 5 arguments the 'clap' crate is to be used.
+///
 
 pub fn parser() -> Result<ConfigApp, ()> {
     let mut argv = args().skip(1);
@@ -89,6 +92,9 @@ pub fn parser() -> Result<ConfigApp, ()> {
                     return Err(());
                 }
             }
+            //
+            // # if not of the above return err
+            //
             _ => {
                 eprintln!("Argument Error: Unknown flag {}.", arg_flag);
                 return Err(());

@@ -36,7 +36,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // TODO : handle the Fuzz keyword here.
 
-    let resp: Response = reqwest::get(config.url.unwrap()).await?;
+    let resp: Response;
+    if let Some(url) = config.url {
+        resp = reqwest::get(url).await?;
+    } else {
+        eprintln!("URL error: URL must have a value.");
+        exit(1);
+    };
 
     println!("Status: {}", resp.status());
     println!("Body: {}", resp.text().await?);
