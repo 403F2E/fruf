@@ -15,6 +15,9 @@ pub struct ConfigApp {
 
     /// Thread Pool size
     pub pool: u8,
+
+    /// HTTP METHOD used for the request
+    pub method: String,
 }
 
 impl ConfigApp {}
@@ -23,8 +26,9 @@ impl Default for ConfigApp {
     fn default() -> Self {
         Self {
             url: None,
-            pool: 0,
             file_path: DEFAULT_PATH.into(),
+            pool: 0,
+            method: "GET".to_owned(),
         }
     }
 }

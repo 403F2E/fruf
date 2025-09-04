@@ -1,4 +1,4 @@
-use fruf::{ConfigApp, FLAG_PATH, FLAG_POOL, FLAG_URL};
+use crate::{ConfigApp, FLAG_PATH, FLAG_POOL, FLAG_URL};
 use std::env::args;
 
 ///
@@ -37,13 +37,39 @@ pub fn parser() -> Result<ConfigApp, ()> {
                     eprintln!("Argument Error: the '--url' flag requires a url value.");
                 })?;
 
-                if !url_value.starts_with("https://") || !url_value.starts_with("http://") {
+                if !url_value.starts_with("https://") && !url_value.starts_with("http://") {
                     eprintln!("Argument Error: URL must start with 'http://' or 'https://'.");
                     return Err(());
                 }
 
                 config.url = Some(url_value);
             }
+
+            //
+            // # Second Pattern:
+            //
+            // '--method' or '-m'.
+            //
+            // Check if the --method flag own a value:
+            //
+            // - if true
+            //     the METHOD must be an VALID HTTP method.
+            // - if not
+            //     return Err
+            //
+            method_flag if FLAG_URL.contains(&method_flag) => {
+                let method_value: String = argv.next().ok_or_else(|| {
+                    eprintln!("Argument Error: the '--method' flag requires a url value.");
+                })?;
+
+                if !is_http_valid(&method_value) {
+                    eprintln!("Argument Error: METHOD must be valid HTTP method.");
+                    return Err(());
+                }
+
+                config.method = method_value;
+            }
+
             //
             // # Second Pattern:
             //
@@ -103,4 +129,8 @@ pub fn parser() -> Result<ConfigApp, ()> {
     }
 
     Ok(config)
+}
+
+fn is_http_valid(method: &str) -> bool {
+    matches!(method, "GET" | "POST" | "HEAD" | "OPTION" | "CONNECT")
 }
