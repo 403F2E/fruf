@@ -2,6 +2,9 @@
 /// # Type
 /// Request : request type to be built to send to the web server
 ///
+/// # Idea
+/// in this file I m going to try to build the request myself and send it myself instead of "reqwest" crate
+///
 pub struct Request {
     //
     // Start-line holds:
@@ -27,12 +30,20 @@ pub struct Request {
     pub body: Vec<String>,
 }
 
+pub struct RequestBuilder {
+    url: String,
+    method: Option<String>,
+    headers: Option<Vec<String>>,
+    body: Option<Vec<String>>,
+}
+
 impl Request {
-    pub fn new(start_line: &str) -> Self {
-        Self {
-            start_line: start_line.to_owned(),
-            headers: vec!["\r\n".to_owned()],
-            body: vec![],
+    pub fn new(url: &str, method: &str) -> RequestBuilder {
+        RequestBuilder {
+            method: Some(method.to_owned()),
+            url: url.to_owned(),
+            headers: Some(vec!["\r\n".to_owned()]),
+            body: Some(vec![]),
         }
     }
 }
@@ -51,22 +62,46 @@ impl Request {
 /// }
 /// ```
 ///
-impl Request {
-    // the program expects the http method (DEFAULT: GET) and URL value
-    pub fn push_start_line(mut self, start_line: &str) -> Self {
-        self.start_line = start_line.to_owned();
+impl RequestBuilder {
+    // the program expects a URL
+    pub fn url(mut self, url: &str) -> Self {
+        self.url = url.to_owned();
+        self
+    }
+
+    // the program expects a HTTP Method (Default: GET)
+    pub fn method(mut self, method: &str) -> Self {
+        self.method = Some(method.to_owned());
         self
     }
 
     // (optional) the program expects key-value pair (default: "").
-    pub fn push_header(mut self, header: &str) -> Self {
-        self.headers.push(header.to_owned());
+    pub fn header(mut self, key: &str, value: &str) -> Self {
+        if let Some(ref mut headers) = self.headers {
+            let _ = headers.pop();
+            headers.push(format!("{} : {}", key, value));
+            headers.push("\r\n".to_owned());
+        }
         self
     }
 
     // (optional) the program expects a payload either json or form submission data.
-    pub fn push_body(mut self, payload: &str) -> Self {
-        self.body.push(payload.to_owned());
+    pub fn body(mut self, payload: &str) -> Self {
+        if let Some(ref mut body) = self.body {
+            body.push(payload.to_owned());
+        }
         self
+    }
+
+    // to continue working on
+    pub fn build(self) -> Request {
+        let _start_line: String = format!("{} {} HTTP/1.0 \r\n", self.method.unwrap(), self.url);
+        let headers: Vec<String> = self.headers.unwrap();
+        let body: Vec<String> = self.body.unwrap();
+        Request {
+            start_line: "".to_owned(),
+            headers: headers,
+            body: body,
+        }
     }
 }
