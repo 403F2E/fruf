@@ -4,10 +4,11 @@
 //!
 
 mod args;
+mod config;
 
 use reqwest::{Client, Response};
 
-use fruf::ConfigApp;
+use config::ConfigApp;
 
 use args::parser;
 use std::{fs, process::exit};
