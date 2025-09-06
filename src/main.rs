@@ -5,9 +5,9 @@
 
 mod args;
 
-use reqwest::{self, Response};
+use reqwest::{Client, Response};
 
-use fruf::{ConfigApp, FLAG_PATH, FLAG_POOL, FLAG_URL};
+use fruf::ConfigApp;
 
 use args::parser;
 use std::{fs, process::exit};
@@ -37,19 +37,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config.file_path, file_content
     );
 
-    // TODO : handle the Fuzz keyword here.
+    // TODO : the Fuzzing logic keyword here.
 
-    // TODO : change the reqwest crate with native implementation using the TcpListener
-    let resp: Response;
-    if let Some(url) = config.url {
-        resp = reqwest::get(url).await?;
-    } else {
-        eprintln!("URL error: a URL must be given.");
-        exit(1);
-    };
+    // TODO : create thread pool to use
+    let client: Client = Client::new();
+    let resp: Response = client.get(config.url).send().await?;
 
     println!("Status: {}", resp.status());
-    println!("Body: {}", resp.text().await?);
+    //println!("Body: {}", resp.text().await?);
+    println!("Request Object : {:?}", resp);
 
     Ok(())
 }
