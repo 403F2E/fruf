@@ -10,13 +10,9 @@ use crate::ConfigApp;
 /// ```
 /// let config = args::parser().unwrap();
 /// ```
-//
-/// # Notice:
-/// After implementing more than 5 arguments the 'clap' crate is to be used.
 ///
 
 pub fn parser() -> Result<ConfigApp, ()> {
-    //let mut argv = args().skip(1);
     let config: ConfigApp = ConfigApp::parse();
 
     //

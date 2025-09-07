@@ -27,7 +27,7 @@ pub struct ConfigApp {
     pub body: Option<String>,
 
     /// File Path to the Wordlist to Fuzz from
-    #[arg(short = 'w', long = "wordlist", default_value=DEFAULT_PATH)]
+    #[arg(short = 'w', long = "wordlist", default_value = DEFAULT_PATH)]
     pub file_path: PathBuf,
 
     /// Thread Pool size
