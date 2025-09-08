@@ -10,7 +10,7 @@ use std::{
 pub use args::*;
 pub use config::*;
 pub use error::AppError;
-pub use reqwest::{Client, Response};
+pub use reqwest::blocking::Client;
 
 // #### Thread Pool Logic here #### //
 
