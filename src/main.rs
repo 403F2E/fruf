@@ -3,9 +3,10 @@
 //! fruf short for fuzz ruffer u fool. ehh it might change
 //!
 
+use reqwest::blocking::Client;
 use std::{fs, process::exit, sync::Arc, time::Duration};
 
-use fruf::{parser, Client, ConfigApp, ThreadPool};
+use fruf::{parser, ConfigApp, Fuzzer, ThreadPool};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config: ConfigApp = if let Ok(cfg) = parser() {
@@ -56,32 +57,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         pool.execute(move || {
             // Get the word at the specific index
             let word = &content_ref[index];
-            fuzzy_request(word, &client_ref, &base_url);
+            Fuzzer::get_request(word, &client_ref, &base_url);
         });
     }
 
     Ok(())
-}
-
-fn fuzzy_request(word: &str, client: &Client, base_url: &str) {
-    let url: String = format!("{}{}", base_url, word);
-
-    match client.get(&url).send() {
-        Ok(response) => {
-            let status = response.status();
-            let length: u64 = response.content_length().unwrap_or(0);
-
-            if status.is_success() || status.is_redirection() {
-                println!("[{}] {} -> {} bytes", status, url, length);
-            } else {
-                println!("[{}] {} -> {} bytes", status, url, length);
-            }
-        }
-        Err(e) => {
-            // Only show errors if you want to
-            if !e.is_timeout() {
-                eprintln!("Error for {}: {}", url, e);
-            }
-        }
-    }
 }

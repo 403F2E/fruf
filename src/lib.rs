@@ -1,16 +1,13 @@
-mod args;
-mod config;
 mod error;
+mod utils;
+
+pub use error::AppError;
+pub use utils::*;
 
 use std::{
     sync::{mpsc, Arc, Mutex},
     thread,
 };
-
-pub use args::*;
-pub use config::*;
-pub use error::AppError;
-pub use reqwest::blocking::Client;
 
 // #### Thread Pool Logic here #### //
 
