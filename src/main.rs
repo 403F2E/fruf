@@ -1,12 +1,12 @@
 //!
 //! fruf is a Web Fuzzer written in rust.
-//! fruf short for fuzz ruffer u fool. ehh it might change
+//! fruf short for fuzz rustier u fool.
 //!
 
 use reqwest::blocking::Client;
 use std::{fs, process::exit, sync::Arc, time::Duration};
 
-use fruf::{parser, ConfigApp, Fuzzer, ThreadPool};
+use fruf::{ConfigApp, Fuzzer, ThreadPool, parser};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config: ConfigApp = if let Ok(cfg) = parser() {
