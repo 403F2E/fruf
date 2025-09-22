@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use crate::ConfigApp;
+use crate::{ConfigApp, ConfigAppBuilder};
 
 ///
 /// # Argument parser
@@ -8,7 +8,7 @@ use crate::ConfigApp;
 ///
 
 pub fn parser() -> Result<ConfigApp, ()> {
-    let config: ConfigApp = ConfigApp::parse();
+    let config: ConfigAppBuilder = ConfigAppBuilder::parse();
 
     //
     // '--url' or '-u'.
@@ -29,6 +29,8 @@ pub fn parser() -> Result<ConfigApp, ()> {
         eprintln!("Argument Error: METHOD must be valid HTTP method.");
         return Err(());
     }
+
+    let config: ConfigApp = ConfigApp::from(config);
 
     Ok(config)
 }

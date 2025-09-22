@@ -4,9 +4,9 @@
 //!
 
 use reqwest::blocking::Client;
-use std::{fs, process::exit, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
-use fruf::{ConfigApp, Fuzzer, ThreadPool, parser};
+use fruf::{parser, ConfigApp, Fuzzer, ThreadPool};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config: ConfigApp = if let Ok(cfg) = parser() {
@@ -14,23 +14,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         std::process::exit(1);
     };
-
-    //
-    // check the wordlist existants.
-    //
-    if !fs::exists(&config.file_path)? {
-        eprintln!("File Error: There is no file in the given path.");
-        exit(1);
-    }
-
-    //
-    // fetch the content of the wordlist
-    //
-    let file_content: Vec<String> = fs::read_to_string(&config.file_path)?
-        .lines()
-        .map(|s| s.to_string())
-        .filter(|s| !s.trim().is_empty())
-        .collect();
 
     //
     // the Fuzzing logic keyword here.
@@ -45,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build()
         .unwrap();
 
-    let shared_content: Arc<Vec<String>> = Arc::new(file_content);
+    let shared_content: Arc<Vec<String>> = Arc::new(config.file_content);
 
     let pool: ThreadPool = ThreadPool::new(config.pool);
 
@@ -53,11 +36,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let content_ref: Arc<Vec<String>> = Arc::clone(&shared_content);
         let client_ref: Client = client.clone();
         let base_url: String = config.url.clone();
+        let header_ref: Vec<String> = config.headers.clone();
+        let body_ref: Vec<String> = config.body.clone();
 
         pool.execute(move || {
             // Get the word at the specific index
-            let word = &content_ref[index];
-            Fuzzer::get_request(word, &client_ref, &base_url);
+            let word: &String = &content_ref[index];
+            Fuzzer::get_request(word, &client_ref, &base_url, header_ref, body_ref);
         });
     }
 
