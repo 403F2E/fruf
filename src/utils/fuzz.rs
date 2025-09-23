@@ -1,4 +1,7 @@
-use reqwest::blocking::Client;
+use reqwest::{
+    blocking::Client,
+    header::{HeaderMap, HeaderName, HeaderValue},
+};
 
 ///
 /// # Fuzzer
@@ -21,32 +24,46 @@ use reqwest::blocking::Client;
 pub struct Fuzzer;
 
 impl Fuzzer {
-    pub fn get_request(
-        word: &str,
-        client: &Client,
-        base_url: &str,
-        mut _headers: Vec<String>,
-        mut _bodys: Vec<String>,
-    ) {
+    pub fn get_request(word: &str, client: &Client, base_url: &str, mut headers: Vec<String>) {
+        let url: String;
         // replace the word FUZZ with the corresponding word from the list
         if !base_url.contains("FUZZ") {
-            if !_headers.is_empty() {
-                _headers = _headers
+            if !headers.is_empty() {
+                headers = headers
                     .iter()
-                    .map(|header| header.replace("FUZZ", word))
+                    .map(|header| {
+                        if header.contains("FUZZ") {
+                            return header.replace("FUZZ", word);
+                        }
+                        header.to_string()
+                    })
                     .collect();
             }
-            if !_bodys.is_empty() {
-                _bodys = _bodys
-                    .iter()
-                    .map(|body| body.replace("FUZZ", word))
-                    .collect();
+            url = base_url.to_owned();
+        } else {
+            url = base_url.replace("FUZZ", word);
+        }
+
+        let mut headers_map: HeaderMap = HeaderMap::new();
+
+        for header in headers {
+            if let Some((key, value)) = header.split_once(':') {
+                let key = key.trim();
+                let value = value.trim();
+
+                // Skip empty headers
+                if key.is_empty() || value.is_empty() {
+                    continue;
+                }
+
+                headers_map.insert(
+                    HeaderName::from_bytes(key.as_bytes()).unwrap(),
+                    HeaderValue::from_str(value).unwrap(),
+                );
             }
         }
 
-        let url: String = format!("{}{}", base_url, word);
-
-        match client.get(&url).send() {
+        match client.get(&url).headers(headers_map).send() {
             Ok(response) => {
                 let status = response.status();
                 let length: u64 = response.content_length().unwrap_or(0);

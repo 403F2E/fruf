@@ -84,6 +84,12 @@ impl From<ConfigAppBuilder> for ConfigApp {
         };
 
         let body: Vec<String> = if let Some(body) = builder_config.body {
+            if builder_config.method == "GET" {
+                eprintln!(
+                    "Argument Error: no argument body should be given while sending GET http request."
+                );
+                exit(1);
+            }
             vec![body]
         } else {
             Vec::new()
