@@ -1,3 +1,4 @@
+mod config;
 mod error;
 mod utils;
 
@@ -18,21 +19,21 @@ type Recv = Arc<Mutex<mpsc::Receiver<Message>>>;
 
 // --- Alias Region Ends --- //
 
-// --- Job State Region --- //
+// --- Message State Region --- //
 
 enum Message {
     NewJob(Job),
     Terminate,
 }
 
-// --- Job State Region Ends --- //
+// --- Message State Region Ends --- //
 
 // --- ThreadPool Region --- //
 
 ///
 /// # ThreadPool
 /// type refers to the number of threads to be spawned executing the fuzzing logic
-/// according to the pool number given for the command
+/// according to the pool number
 ///
 pub struct ThreadPool {
     workers: Vec<Worker>,
@@ -40,9 +41,7 @@ pub struct ThreadPool {
 }
 
 impl ThreadPool {
-    pub fn new(size: u8) -> Self {
-        let size: usize = size as usize;
-
+    pub fn new(size: usize) -> Self {
         let mut workers: Vec<Worker> = Vec::with_capacity(size);
 
         let (sender, receiver) = mpsc::channel();

@@ -37,13 +37,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let client_ref: Client = client.clone();
         let base_url: String = config.url.clone();
         let header_ref: Vec<String> = config.headers.clone();
-        let _body_ref: Vec<String> = config.body.clone();
+        let body_ref: String = config.body.clone();
 
-        pool.execute(move || {
-            // Get the word at the specific index
-            let word: &String = &content_ref[index];
-            Fuzzer::get_request(word, &client_ref, &base_url, header_ref);
-        });
+        match &config.method {
+            "GET" => {
+                pool.execute(move || {
+                    // Get the word at the specific index
+                    let word: &String = &content_ref[index];
+                    Fuzzer::get_request(word, &client_ref, &base_url, header_ref);
+                });
+            }
+            "POST" => {
+                pool.execute(move || {
+                    let word: &String = &content_ref[index];
+                    Fuzzer::post_request(word, &client_ref, &base_url, header_ref, body_ref);
+                });
+            }
+        }
     }
 
     Ok(())

@@ -48,9 +48,9 @@ pub struct ConfigAppBuilder {
 pub struct ConfigApp {
     pub url: String,
     pub headers: Vec<String>,
-    pub body: Vec<String>,
+    pub body: String,
     pub file_content: Vec<String>,
-    pub pool: u8,
+    pub pool: usize,
     pub method: String,
 }
 
@@ -58,7 +58,7 @@ impl From<ConfigAppBuilder> for ConfigApp {
     fn from(builder_config: ConfigAppBuilder) -> Self {
         //
         //
-        // check the wordlist existants.
+        // check the wordlist existence.
         //
         if let Ok(exist) = fs::exists(&builder_config.file_path) {
             if !exist {
@@ -83,16 +83,16 @@ impl From<ConfigAppBuilder> for ConfigApp {
             Vec::new()
         };
 
-        let body: Vec<String> = if let Some(body) = builder_config.body {
+        let body: String = if let Some(body) = builder_config.body {
             if builder_config.method == "GET" {
                 eprintln!(
                     "Argument Error: no argument body should be given while sending GET http request."
                 );
                 exit(1);
             }
-            vec![body]
+            body
         } else {
-            Vec::new()
+            String::new()
         };
 
         Self {
@@ -100,7 +100,7 @@ impl From<ConfigAppBuilder> for ConfigApp {
             headers,
             body,
             file_content: file_content,
-            pool: builder_config.pool,
+            pool: builder_config.pool as usize,
             method: builder_config.method,
         }
     }
