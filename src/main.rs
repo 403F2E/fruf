@@ -1,19 +1,21 @@
 //!
-//! fruf is a Web Fuzzer written in rust.
+//! fruf is simple a Web Fuzzer written in rust.
 //! fruf short for fuzz rustier u fool.
 //!
+//! trying my first projects :)
+//!
 
+use clap::Parser;
 use reqwest::blocking::Client;
 use std::{sync::Arc, time::Duration};
 
-use fruf::{parser, ConfigApp, Fuzzer, ThreadPool};
+use fruf::{ConfigApp, ConfigAppBuilder, Fuzzer, ThreadPool};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config: ConfigApp = if let Ok(cfg) = parser() {
-        cfg
-    } else {
-        std::process::exit(1);
-    };
+    // initialzing the configs
+    let config: ConfigAppBuilder = ConfigAppBuilder::parse();
+
+    let config: ConfigApp = ConfigApp::from(config);
 
     //
     // the Fuzzing logic keyword here.
@@ -24,7 +26,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //
     let client: Client = Client::builder()
         .timeout(Duration::from_secs(10))
-        .user_agent("Rust-Fuzzer/1.0")
         .build()
         .unwrap();
 
@@ -39,12 +40,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let header_ref: Vec<String> = config.headers.clone();
         let body_ref: String = config.body.clone();
 
-        match &config.method {
+        match config.method.as_str() {
             "GET" => {
                 pool.execute(move || {
                     // Get the word at the specific index
                     let word: &String = &content_ref[index];
-                    Fuzzer::get_request(word, &client_ref, &base_url, header_ref);
+                    Fuzzer::get_request(word, &client_ref, &base_url, header_ref, body_ref);
                 });
             }
             "POST" => {
@@ -52,6 +53,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let word: &String = &content_ref[index];
                     Fuzzer::post_request(word, &client_ref, &base_url, header_ref, body_ref);
                 });
+            }
+            other_method => {
+                eprintln!(
+                    "Argmuent Error: No method {} built in this tool.",
+                    other_method
+                );
+                break;
             }
         }
     }

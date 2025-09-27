@@ -1,6 +1,6 @@
 use reqwest::{blocking::Client, header::HeaderMap};
 
-use crate::utils::to_headermap;
+use crate::utils::{replace_fuzz, to_headermap};
 
 ///
 /// # Fuzzer
@@ -24,30 +24,20 @@ pub struct Fuzzer;
 
 impl Fuzzer {
     // the method of the fuzzer to execute the GET request
-    pub fn get_request(word: &str, client: &Client, base_url: &str, mut headers: Vec<String>) {
-        let url: String;
-        // replace the word FUZZ with the corresponding word from the list
-        if !base_url.contains("FUZZ") {
-            if !headers.is_empty() {
-                headers = headers
-                    .iter()
-                    .map(|header| {
-                        if header.contains("FUZZ") {
-                            return header.replace("FUZZ", word);
-                        }
-                        header.to_string()
-                    })
-                    .collect();
-            }
-            url = base_url.to_owned();
-        } else {
-            url = base_url.replace("FUZZ", word);
-        }
+    pub fn get_request(
+        word: &str,
+        client: &Client,
+        base_url: &str,
+        headers: Vec<String>,
+        body: String,
+    ) {
+        let (url, headers, body): (String, Vec<String>, String) =
+            replace_fuzz(base_url, headers, body, word);
 
         // generate the header map object to send in the request
         let headers_map: HeaderMap = to_headermap(headers);
 
-        match client.get(&url).headers(headers_map).send() {
+        match client.get(&url).headers(headers_map).body(body).send() {
             Ok(response) => {
                 let status = response.status();
                 let length: u64 = response.content_length().unwrap_or(0);
@@ -77,32 +67,16 @@ impl Fuzzer {
         }
     }
 
+    // the method of the fuzzer to execute the GET request
     pub fn post_request(
         word: &str,
         client: &Client,
         base_url: &str,
-        mut headers: Vec<String>,
+        headers: Vec<String>,
         body: String,
     ) {
-        let url: String;
-
-        // replace the word FUZZ with the corresponding word from the list
-        if !base_url.contains("FUZZ") {
-            if !headers.is_empty() {
-                headers = headers
-                    .iter()
-                    .map(|header| {
-                        if header.contains("FUZZ") {
-                            return header.replace("FUZZ", word);
-                        }
-                        header.to_string()
-                    })
-                    .collect();
-            }
-            url = base_url.to_owned();
-        } else {
-            url = base_url.replace("FUZZ", word);
-        }
+        let (url, headers, body): (String, Vec<String>, String) =
+            replace_fuzz(base_url, headers, body, word);
 
         // generate the header map object to send in the request
         let headers_map: HeaderMap = to_headermap(headers);

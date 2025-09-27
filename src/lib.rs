@@ -1,8 +1,7 @@
 mod config;
-mod error;
 mod utils;
 
-pub use error::AppError;
+pub use config::*;
 pub use utils::*;
 
 use std::{
@@ -66,17 +65,11 @@ impl ThreadPool {
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
-        println!("Terminating all workers...");
-
         for _ in &self.workers {
             self.sender.send(Message::Terminate).unwrap();
         }
 
-        println!("Shutting down all workers...");
-
         for worker in &mut self.workers {
-            println!("Shutting down worker {}", worker.id);
-
             if let Some(thread) = worker.thread.take() {
                 thread.join().unwrap();
             }
@@ -92,6 +85,7 @@ impl Drop for ThreadPool {
 /// # Worker
 /// type unit for the worker that executes one single fuzzing function
 ///
+#[allow(dead_code)]
 struct Worker {
     id: usize,
     thread: Option<thread::JoinHandle<()>>,
@@ -105,8 +99,6 @@ impl Worker {
             match message {
                 Message::NewJob(job) => {
                     job();
-
-                    println!("Worker {} got sent the request.", id);
                 }
                 Message::Terminate => break,
             }

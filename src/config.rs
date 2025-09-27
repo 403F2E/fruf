@@ -57,7 +57,6 @@ pub struct ConfigApp {
 impl From<ConfigAppBuilder> for ConfigApp {
     fn from(builder_config: ConfigAppBuilder) -> Self {
         //
-        //
         // check the wordlist existence.
         //
         if let Ok(exist) = fs::exists(&builder_config.file_path) {
@@ -65,6 +64,17 @@ impl From<ConfigAppBuilder> for ConfigApp {
                 eprintln!("File Error: There is no file in the given path.");
                 exit(1);
             }
+        }
+
+        //
+        // '--url' or '-u'.
+        //
+        // URL must starts with 'https://' or 'http://'.
+        //
+        if !builder_config.url.starts_with("https://") && !builder_config.url.starts_with("http://")
+        {
+            eprintln!("Argument Error: URL must start with 'http://' or 'https://'.");
+            exit(1);
         }
 
         //
@@ -77,19 +87,29 @@ impl From<ConfigAppBuilder> for ConfigApp {
             .filter(|s| !s.trim().is_empty())
             .collect();
 
+        //
+        // parse the headers into a vector of key-value strings
+        //
         let headers: Vec<String> = if let Some(headers) = builder_config.headers {
-            vec![headers]
+            headers.split(";").map(|s| s.to_owned()).collect()
         } else {
             Vec::new()
         };
 
+        //
+        // '--method' or '-m'.
+        //
+        // METHOD must be an VALID HTTP method.
+        //
+        if !matches!(builder_config.method.as_str(), "GET" | "POST") {
+            eprintln!("Argument Error: METHOD must be valid HTTP method.");
+            exit(1);
+        }
+
+        //
+        // no body should be given when the method is a GET request
+        //
         let body: String = if let Some(body) = builder_config.body {
-            if builder_config.method == "GET" {
-                eprintln!(
-                    "Argument Error: no argument body should be given while sending GET http request."
-                );
-                exit(1);
-            }
             body
         } else {
             String::new()

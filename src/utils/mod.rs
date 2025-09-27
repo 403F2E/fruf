@@ -1,8 +1,6 @@
 mod fuzz;
-mod parser;
 
 pub use fuzz::*;
-pub use parser::*;
 
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 
@@ -27,4 +25,24 @@ fn to_headermap(headers: Vec<String>) -> HeaderMap {
     }
 
     header_map
+}
+
+fn replace_fuzz(
+    base_url: &str,
+    mut headers: Vec<String>,
+    mut body: String,
+    word: &str,
+) -> (String, Vec<String>, String) {
+    // replace the word FUZZ with the corresponding word from the list
+    let url: String = base_url.replace("FUZZ", word);
+    if !headers.is_empty() {
+        headers = headers
+            .iter()
+            .map(|header| header.replace("FUZZ", word))
+            .collect();
+    }
+    if !body.is_empty() {
+        body = body.replace("FUZZ", word);
+    }
+    (url, headers, body)
 }
